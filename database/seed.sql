@@ -2,7 +2,7 @@
 -- UniSphere Seed Data
 -- Order of inserts strictly respects foreign key dependencies:
 -- department, job_position -> section, course -> semester -> "user"
--- -> instructor, student -> course_offering -> enrollment -> assessment,
+-- -> instructor, student -> course_offering -> announcement -> enrollment -> assessment,
 -- resource -> submission -> grade -> transcript -> transcript_entry
 -- -> fee_challan -> notification -> instructor_job_position
 -- =========================================================================
@@ -183,7 +183,111 @@ join department d on d.department_code = v.dept_code
 join section sec on sec.section_name = v.section_name and sec.batch = v.batch and sec.department_id = d.department_id;
 
 -- -------------------------------------------------------------------------
--- 10. ENROLLMENTS
+-- 10. ANNOUNCEMENTS
+-- Realistic announcements for existing course offerings
+-- -------------------------------------------------------------------------
+insert into announcement (
+    offering_id,
+    instructor_id,
+    title,
+    message,
+    created_at
+)
+select
+    co.offering_id,
+    co.instructor_id,
+    v.title,
+    v.message,
+    v.created_at::timestamp
+from (values
+    -- course_code, semester, employee_id, section, batch, dept_code,
+    -- title, message, created_at
+
+    ('CS1101', 'Fall 2025', 'EMP-001', 'A', 23, 'CS',
+     'Programming Fundamentals - Assignment 1',
+     'Assignment 1 has been posted. Submit your solution through the course portal before the deadline. Make sure your code follows the required submission format.',
+     '2025-10-01 10:00:00'),
+
+    ('CS1101', 'Fall 2025', 'EMP-002', 'B', 23, 'CS',
+     'Programming Fundamentals - Quiz Reminder',
+     'Quiz 1 will cover variables, data types, conditional statements, and basic input/output. Please review the Week 1 and Week 2 lecture material before attempting the quiz.',
+     '2025-09-20 14:30:00'),
+
+    ('CS2203', 'Fall 2025', 'EMP-001', 'A', 22, 'CS',
+     'Data Structures - Midterm Preparation',
+     'The midterm examination will cover arrays, linked lists, stacks, queues, and their basic operations. A revision session will be held during the next scheduled lecture.',
+     '2025-11-10 09:00:00'),
+
+    ('AI2001', 'Fall 2025', 'EMP-003', 'A', 23, 'AI',
+     'Introduction to AI - Assignment Guidelines',
+     'Assignment 1 is now available. Read the problem statement carefully and submit both your written explanation and source code. Late submissions may receive a penalty.',
+     '2025-10-05 11:15:00'),
+
+    ('SE2001', 'Fall 2025', 'EMP-004', 'A', 23, 'SE',
+     'Software Engineering - Project Groups',
+     'Students should finalize their project groups and select a project topic. Each group must submit its proposed topic and member list through the course portal.',
+     '2025-09-28 13:00:00'),
+
+    ('CS2203', 'Spring 2026', 'EMP-002', 'A', 23, 'CS',
+     'Data Structures - Lecture Resources',
+     'The latest lecture slides and course handout have been uploaded to the Resources section. Please review the material before the next class.',
+     '2026-02-05 10:30:00'),
+
+    ('CS2203', 'Spring 2026', 'EMP-001', 'B', 23, 'CS',
+     'Data Structures - Quiz 1',
+     'Quiz 1 has been posted and will focus on arrays, linked lists, and algorithm complexity. Please complete it before the stated deadline.',
+     '2026-02-12 15:00:00'),
+
+    ('CS4203', 'Spring 2026', 'EMP-001', 'A', 22, 'CS',
+     'Compiler Construction - Midterm Topics',
+     'The midterm will cover lexical analysis, regular expressions, finite automata, and basic parsing concepts. Additional revision material is available in the course resources.',
+     '2026-03-20 09:30:00'),
+
+    ('AI3001', 'Spring 2026', 'EMP-003', 'A', 23, 'AI',
+     'Machine Learning - Assignment 1',
+     'Assignment 1 has been posted. The task covers data preprocessing, exploratory analysis, and implementation of a basic machine learning model. Follow the submission instructions carefully.',
+     '2026-02-20 12:00:00'),
+
+    ('SE3001', 'Spring 2026', 'EMP-004', 'A', 23, 'SE',
+     'Software Design - Design Document',
+     'The first project milestone requires submission of the system design document. Include the architecture, major components, and relevant UML diagrams.',
+     '2026-02-25 14:00:00'),
+
+    ('AI3002', 'Spring 2026', 'EMP-005', 'A', 23, 'AI',
+     'Neural Networks - Course Update',
+     'The next lectures will introduce forward propagation, activation functions, loss functions, and backpropagation. Students are encouraged to review the uploaded lecture slides beforehand.',
+     '2026-02-08 16:00:00')
+) as v(
+    course_code,
+    semester_name,
+    employee_id,
+    section_name,
+    batch,
+    dept_code,
+    title,
+    message,
+    created_at
+)
+join course c
+    on c.course_code = v.course_code
+join semester sem
+    on sem.semester_name = v.semester_name
+join instructor i
+    on i.employee_id = v.employee_id
+join department d
+    on d.department_code = v.dept_code
+join section sec
+    on sec.section_name = v.section_name
+   and sec.batch = v.batch
+   and sec.department_id = d.department_id
+join course_offering co
+    on co.course_id = c.course_id
+   and co.semester_id = sem.semester_id
+   and co.instructor_id = i.instructor_id
+   and co.section_id = sec.section_id;
+
+-- -------------------------------------------------------------------------
+-- 11. ENROLLMENTS
 -- A student is enrolled into every course_offering that matches their own
 -- section (this naturally yields 44 enrollments across both semesters).
 -- -------------------------------------------------------------------------
@@ -194,7 +298,7 @@ join course_offering co on co.section_id = s.section_id
 join semester sem on sem.semester_id = co.semester_id;
 
 -- -------------------------------------------------------------------------
--- 11. ASSESSMENTS (4 per offering: Quiz, Assignment, Midterm, Final)
+-- 12. ASSESSMENTS (4 per offering: Quiz, Assignment, Midterm, Final)
 -- -------------------------------------------------------------------------
 insert into assessment (offering_id, instructor_id, title, type, total_marks, due_date)
 select co.offering_id, co.instructor_id, v.title, v.type, v.total_marks,
@@ -209,7 +313,7 @@ cross join (values
 ) as v(title, type, total_marks, offset_days);
 
 -- -------------------------------------------------------------------------
--- 12. RESOURCES (2 per offering: slides + handout)
+-- 13. RESOURCES (2 per offering: slides + handout)
 -- -------------------------------------------------------------------------
 insert into resource (offering_id, instructor_id, title, description, resource_type, file_path)
 select co.offering_id, co.instructor_id, v.title, v.description, v.resource_type,
@@ -221,7 +325,7 @@ cross join (values
 ) as v(title, description, resource_type, suffix);
 
 -- -------------------------------------------------------------------------
--- 13. SUBMISSIONS (one row per enrolled student per assessment)
+-- 14. SUBMISSIONS (one row per enrolled student per assessment)
 -- -------------------------------------------------------------------------
 insert into submission (assessment_id, student_id, file_path, submitted_at, status)
 select a.assessment_id, e.student_id,
@@ -239,7 +343,7 @@ from assessment a
 join enrollment e on e.offering_id = a.offering_id;
 
 -- -------------------------------------------------------------------------
--- 14. GRADES (graded for every submission, 60%-100% of total marks)
+-- 15. GRADES (graded for every submission, 60%-100% of total marks)
 -- -------------------------------------------------------------------------
 insert into grade (submission_id, instructor_id, marks_obtained, feedback, graded_at)
 select s.submission_id, a.instructor_id,
@@ -250,7 +354,7 @@ from submission s
 join assessment a on a.assessment_id = s.assessment_id;
 
 -- -------------------------------------------------------------------------
--- 15. TRANSCRIPTS (one per student per semester they were enrolled in)
+-- 16. TRANSCRIPTS (one per student per semester they were enrolled in)
 -- semester_gpa and cgpa are DERIVED, not independently assigned:
 --   1. offering_perf: each student's average percentage in an offering,
 --      computed directly from grade.marks_obtained / assessment.total_marks
@@ -310,7 +414,7 @@ select student_id, semester_id, semester_gpa, cgpa
 from cumulative;
 
 -- -------------------------------------------------------------------------
--- 16. TRANSCRIPT ENTRIES (one per enrollment / completed offering)
+-- 17. TRANSCRIPT ENTRIES (one per enrollment / completed offering)
 -- Same offering_perf/graded derivation as above, joined to the transcript
 -- row just inserted, so entry-level letter grades always match the
 -- underlying marks_obtained data (and roll up correctly into GPA/CGPA).
@@ -348,7 +452,7 @@ from graded g
 join transcript tr on tr.student_id = g.student_id and tr.semester_id = g.semester_id;
 
 -- -------------------------------------------------------------------------
--- 17. FEE CHALLANS (one per student per semester)
+-- 18. FEE CHALLANS (one per student per semester)
 -- -------------------------------------------------------------------------
 insert into fee_challan (student_id, semester_id, amount, due_date, status)
 select s.student_id, sem.semester_id,
@@ -364,7 +468,7 @@ from student s
 cross join semester sem;
 
 -- -------------------------------------------------------------------------
--- 18. NOTIFICATIONS
+-- 19. NOTIFICATIONS
 -- -------------------------------------------------------------------------
 -- Welcome / system notification for every user
 insert into notification (user_id, title, message, notification_type, is_read)
@@ -425,7 +529,7 @@ join enrollment e on e.offering_id = r.offering_id
 join student st on st.student_id = e.student_id;
 
 -- -------------------------------------------------------------------------
--- 19. INSTRUCTOR JOB POSITIONS
+-- 20. INSTRUCTOR JOB POSITIONS
 -- -------------------------------------------------------------------------
 insert into instructor_job_position (instructor_id, position_id)
 select i.instructor_id, jp.position_id

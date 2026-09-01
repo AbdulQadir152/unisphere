@@ -125,13 +125,22 @@ create table resource (
     uploaded_at timestamp not null default current_timestamp
 );
 
+create table announcement(
+    announcement_id integer generated always as identity primary key,
+    offering_id integer not null references course_offering(offering_id) on delete cascade,
+    instructor_id integer not null references instructor(instructor_id),
+    title varchar(100) not null,
+    message text not null,
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp
+);
+
 create table transcript(
     transcript_id integer generated always as identity primary key, 
     student_id integer not null references student(student_id) on delete cascade,
     semester_id integer not null references semester(semester_id) on delete cascade,
     semester_gpa numeric(3, 2) not null check(semester_gpa between 0.00 and 4.00), 
-    cgpa numeric(3, 2) not null check(cgpa between 0.00 and 4.00),
-    unique(student_id, semester_id)
+    cgpa numeric(3, 2) not null check(cgpa between 0.00 and 4.00)
 );
 
 create table transcript_entry (
@@ -160,7 +169,7 @@ create table notification (
     user_id integer not null references "user"(user_id) on delete cascade,
     title varchar(100) not null,
     message text not null,
-    notification_type varchar(20) not null check (notification_type in ('Assignment', 'Quiz', 'Grade', 'Fee', 'Course', 'System')),
+    notification_type varchar(20) not null check (notification_type in ('Assignment', 'Quiz', 'Grade', 'Fee', 'Course', 'Announcement', 'System')),
     is_read boolean not null default false,
     created_at timestamp not null default current_timestamp
 );
