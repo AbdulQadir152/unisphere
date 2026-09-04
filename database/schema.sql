@@ -1,14 +1,3 @@
-create table "user"(
-    user_id integer generated always as identity primary key,
-    username varchar(50) not null unique,
-    password_hash varchar(255) not null,
-    email varchar(255) not null unique,
-    role varchar(20) not null check (role in ('Admin', 'Student', 'Instructor')),
-    is_active boolean not null default true,
-    created_at timestamp not null default current_timestamp,
-    updated_at timestamp not null default current_timestamp
-);
-
 create table department (
     department_id integer generated always as identity primary key,
     department_name varchar(100) not null unique,
@@ -25,7 +14,7 @@ create table section (
 
 create table student(
     student_id integer generated always as identity primary key,
-    user_id integer not null unique references "user"(user_id) on delete cascade,
+    user_id integer not null unique references auth_user(id) on delete cascade,
     roll_no varchar(20) not null unique,
     first_name varchar(50) not null,
     last_name varchar(50) not null,
@@ -41,7 +30,7 @@ create table student(
 
 create table instructor (
     instructor_id integer generated always as identity primary key,
-    user_id integer not null unique references "user"(user_id) on delete cascade,
+    user_id integer not null unique references auth_user(id) on delete cascade,
     employee_id varchar(20) not null unique,
     first_name varchar(50) not null,
     last_name varchar(50) not null,
@@ -166,7 +155,7 @@ create table fee_challan (
 
 create table notification (
     notification_id integer generated always as identity primary key,
-    user_id integer not null references "user"(user_id) on delete cascade,
+    user_id integer not null references auth_user(id) on delete cascade,
     title varchar(100) not null,
     message text not null,
     notification_type varchar(20) not null check (notification_type in ('Assignment', 'Quiz', 'Grade', 'Fee', 'Course', 'Announcement', 'System')),
