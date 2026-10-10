@@ -1,12 +1,17 @@
 from django.urls import path, include
-from .views import EnrollmentViewSet
+from .views import StudentEnrollmentViewSet, AdminEnrollmentViewSet, AvailableOfferingView
 
 from rest_framework.routers import DefaultRouter
-router = DefaultRouter()
+student_router = DefaultRouter()
+admin_router = DefaultRouter()
 
-router.register('enrollments', EnrollmentViewSet, basename = 'enrollment')
+student_router.register('enrollments', StudentEnrollmentViewSet, basename = 'student-enrollment')
+admin_router.register('enrollments', AdminEnrollmentViewSet, basename = 'admin-enrollment')
 
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # path('enrollments/available/', AvailableOfferingView.as_view(), name = 'available-enrollments'),
+    path('', include(student_router.urls)),
+    path('admin/', include(admin_router.urls)),
+    path('enrollments-available/', AvailableOfferingView.as_view(), name = 'available-enrollments'),
 ]

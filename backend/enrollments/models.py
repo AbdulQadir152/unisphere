@@ -1,6 +1,5 @@
 from django.db import models
 
-
 class Enrollment(models.Model):
     enrollment_id = models.AutoField(primary_key=True)
 
