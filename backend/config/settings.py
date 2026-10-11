@@ -12,9 +12,9 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from datetime import timedelta
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-}
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours = 1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days = 7),
+} 
 
 import os
 from dotenv import load_dotenv

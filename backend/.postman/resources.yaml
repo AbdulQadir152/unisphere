@@ -1,8 +1,0 @@
-workspace:
-  id: 99de1e63-e25b-49fb-8a94-61b1f0b36387
-cloudResources:
-  collections:
-    ../postman/collections/UniSphere API: 55533790-4bea27e6-be87-448f-8d55-a5e8bc36baca
-    ../postman/collections/Task Management System API: 55533790-c40c2dcf-722f-4ac8-bdbb-5f396111f6f3
-    ../postman/collections/My Collection: 55533790-27622df3-150f-4a4b-bcda-b1867979521f
-    ../postman/collections/Bookstore API: 55533790-6be6a6ba-4617-418a-8c56-366fae790053
