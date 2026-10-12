@@ -10,7 +10,6 @@ admin_router.register('enrollments', AdminEnrollmentViewSet, basename = 'admin-e
 
 
 urlpatterns = [
-    # path('enrollments/available/', AvailableOfferingView.as_view(), name = 'available-enrollments'),
     path('', include(student_router.urls)),
     path('admin/', include(admin_router.urls)),
     path('enrollments-available/', AvailableOfferingView.as_view(), name = 'available-enrollments'),

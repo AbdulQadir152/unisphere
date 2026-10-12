@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Department, Section, Semester, Course, CourseOffering
 from accounts.models import Instructor
+from accounts.serializers import NestedDepartmentSerializer
 
 class DepartmentSerializer(serializers.ModelSerializer):
 
@@ -13,14 +14,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['department_id']
 
-class NestedDepartmentSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Department
-        fields = [
-            'department_name',
-            'department_code',
-        ]
 
 class SectionSerializer(serializers.ModelSerializer):
 
@@ -116,7 +109,7 @@ class NestedInstructorSerializer(serializers.ModelSerializer):
         ]
 
 class NestedSectionSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model = Section
         fields = [

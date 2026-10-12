@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Student, Instructor
 from academics.models import Department, Section
 
-class DepartmentSerializer(serializers.ModelSerializer):
+class NestedDepartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Department
@@ -11,7 +11,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
             'department_code',
         ]
 
-class SectionSerializer(serializers.ModelSerializer):
+class NestedSectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Section
@@ -49,8 +49,8 @@ class StudentSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['department'] = DepartmentSerializer(instance.department).data
-        data['section'] = SectionSerializer(instance.section).data
+        data['department'] = NestedDepartmentSerializer(instance.department).data
+        data['section'] = NestedSectionSerializer(instance.section).data
         return data 
 
 class InstructorSerializer(serializers.ModelSerializer):
@@ -75,5 +75,5 @@ class InstructorSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['department'] = DepartmentSerializer(instance.department).data
+        data['department'] = NestedDepartmentSerializer(instance.department).data
         return data

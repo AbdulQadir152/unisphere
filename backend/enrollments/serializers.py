@@ -2,10 +2,79 @@ from rest_framework import serializers
 from django.utils import timezone
 
 from .models import Enrollment
-from academics.models import CourseOffering
+from academics.models import CourseOffering, Department, Section, Semester, Course
+from accounts.models import Student, Instructor
+
+from accounts.serializers import NestedDepartmentSerializer, NestedSectionSerializer
+from academics.serializers import NestedCourseSerializer, NestedSemesterSerializer, NestedInstructorSerializer
+
+class StudentSerializer(serializers.ModelSerializer):
+
+    department = serializers.PrimaryKeyRelatedField(
+        queryset = Department.objects.all()
+    )
+    section = serializers.PrimaryKeyRelatedField(
+        queryset = Section.objects.all()
+    )
+
+    class Meta:
+        model = Student
+        fields = [
+            'roll_no',
+            'first_name',
+            'last_name',
+            'department',
+            'section',
+            'batch',
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['department'] = NestedDepartmentSerializer(instance.department).data
+        data['section'] = NestedSectionSerializer(instance.section).data
+        return data 
+
+class CourseOfferingSerializer(serializers.ModelSerializer):
+
+    course = serializers.PrimaryKeyRelatedField(
+                queryset = Course.objects.all()
+            )
+    semester = serializers.PrimaryKeyRelatedField(
+        queryset = Semester.objects.all()
+    )
+    instructor = serializers.PrimaryKeyRelatedField(
+        queryset = Instructor.objects.all()
+    )
+    section = serializers.PrimaryKeyRelatedField(
+        queryset = Section.objects.all()
+    )
+
+    class Meta:
+        model = CourseOffering
+        fields = [
+            'course',
+            'semester',
+            'instructor',
+            'section',
+            'registration_deadline',
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['course'] = NestedCourseSerializer(instance.course).data
+        data['semester'] = NestedSemesterSerializer(instance.semester).data
+        data['instructor'] = NestedInstructorSerializer(instance.instructor).data
+        data['section'] = NestedSectionSerializer(instance.section).data
+        return data
 
 class StudentEnrollmentSerialzier(serializers.ModelSerializer):
 
+    student = serializers.PrimaryKeyRelatedField(
+            queryset = Student.objects.all()
+        )
+    offering = serializers.PrimaryKeyRelatedField(
+            queryset = CourseOffering.objects.all()
+        )
     class Meta:
         model = Enrollment
         fields = [
@@ -62,8 +131,20 @@ class StudentEnrollmentSerialzier(serializers.ModelSerializer):
             enrollment_date = timezone.localdate(),
         )
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['student'] = StudentSerializer(instance.student).data
+        data['offering'] = CourseOfferingSerializer(instance.offering).data
+        return data
+
 class AdminEnrollmentSerializer(serializers.ModelSerializer):
 
+    student = serializers.PrimaryKeyRelatedField(
+        queryset = Student.objects.all()
+    )
+    offering = serializers.PrimaryKeyRelatedField(
+        queryset = CourseOffering.objects.all()
+    )
     class Meta:
         model = Enrollment
         fields = [
@@ -97,23 +178,14 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
                 {'offering': 'Registration deadline has passed.'}
             )
 
-        enrollment_id = self.instance.enrollment_id if self.instance else None
-
-        duplicate = Enrollment.objects.filter(
-            student=student,
-            offering=offering
-        ).exclude(
-            enrollment_id=enrollment_id
-        ).exists()
-
-        if duplicate:
-            raise serializers.ValidationError(
-                {
-                    'offering':
-                    'Student is already enrolled in this course offering.'
-                }
-            )
-
+        if Enrollment.objects.filter(
+            student = student,
+                offering = offering
+            ).exists():
+                raise serializers.ValidationError(
+                {'offering':'You are already enrolled in this course offering.'}
+                )
+        
         return attrs
 
     def create(self, validated_data):
@@ -124,8 +196,27 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
         enrollment_date = timezone.localdate(),
     )
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['student'] = StudentSerializer(instance.student).data
+        data['offering'] = CourseOfferingSerializer(instance.offering).data
+        return data
+
 class AvailableOfferingSerializer(serializers.ModelSerializer):
 
+    course = serializers.PrimaryKeyRelatedField(
+                    queryset = Course.objects.all()
+                )
+    semester = serializers.PrimaryKeyRelatedField(
+            queryset = Semester.objects.all()
+        )
+    instructor = serializers.PrimaryKeyRelatedField(
+            queryset = Instructor.objects.all()
+        )
+    section = serializers.PrimaryKeyRelatedField(
+            queryset = Section.objects.all()
+        )
+    
     class Meta:
         model = CourseOffering
         fields = [
@@ -136,3 +227,11 @@ class AvailableOfferingSerializer(serializers.ModelSerializer):
             'section',
             'registration_deadline',
         ]
+
+    def to_representation(self, instance):
+            data = super().to_representation(instance)
+            data['course'] = NestedCourseSerializer(instance.course).data
+            data['semester'] = NestedSemesterSerializer(instance.semester).data
+            data['instructor'] = NestedInstructorSerializer(instance.instructor).data
+            data['section'] = NestedSectionSerializer(instance.section).data
+            return data
