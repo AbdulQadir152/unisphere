@@ -10,7 +10,6 @@ class Department(models.Model):
         managed = False
         db_table = "department"
 
-
 class Section(models.Model):
     section_id = models.AutoField(primary_key=True)
 
